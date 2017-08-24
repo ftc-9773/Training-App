@@ -46,6 +46,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
+import org.firstinspires.ftc.robotcore.external.navigation.MagneticFlux;
 import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
 import org.firstinspires.ftc.robotcore.external.navigation.Position;
 import org.firstinspires.ftc.robotcore.external.navigation.Velocity;
@@ -66,7 +67,7 @@ import java.util.Locale;
  * Remove or comment out the @Disabled line to add this opmode to the Driver Station OpMode list
  */
 
-@TeleOp(name="Simplebot: Teleop POV", group="Simplebot")
+@TeleOp(name="Simplebot: Teleop POV with angle", group="Simplebot with angle")
 //@Disabled
 public class SimplebotTeleopPOV_Linear extends LinearOpMode {
 
@@ -78,9 +79,14 @@ public class SimplebotTeleopPOV_Linear extends LinearOpMode {
     BNO055IMU imu;
     // State used for updating telemetry
     Orientation angles;
-    Position position;
     Velocity velocity;
     Acceleration gravity;
+
+    // position
+    Position position;
+    double yaw;
+    long encoderR;
+    long encoderL;
 
     @Override
     public void runOpMode() {
@@ -113,11 +119,33 @@ public class SimplebotTeleopPOV_Linear extends LinearOpMode {
         // Set up our telemetry dashboard
         composeTelemetry();
 
+
         // Wait for the game to start (driver presses PLAY)
         waitForStart();
 
+        // init position
+        position = new Position();
+        encoderL = robot.leftMotor.getCurrentPosition();
+        encoderR = robot.rightMotor.getCurrentPosition();
+
         // run until the end of the match (driver presses STOP)
         while (opModeIsActive()) {
+            // position: 1) get yaw
+            yaw = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZXY, AngleUnit.RADIANS).firstAngle;
+            // Note:  The BNO055IMU outputs values from 0 to 180 degrees and -180 to 0 degrees as the
+            // robot spins counter-clockwise. Convert this to a 0 to 360 degrees scale.
+            if (yaw > -Math.PI && yaw < 0.0) {
+                yaw += 2*Math.PI;
+            }
+            // position: get encoder
+            long newEncoderL = robot.leftMotor.getCurrentPosition();
+            long newEncoderR = robot.rightMotor.getCurrentPosition();
+            long avgEncoderDiff = ((newEncoderL - encoderL) + (newEncoderR - encoderR)) / 2;
+            double avgDist = (double) (avgEncoderDiff * 4) * Math.PI / * 560.0;
+            encoderL = newEncoderL;
+            encoderR = newEncoderR;
+            position.x += avgDist * Math.cos(yaw);
+            position.y += avgDist * Math.sin(yaw);
 
             // Run wheels in POV mode (note: The joystick goes negative when pushed forwards, so negate it)
             // In this mode the Left stick moves the robot fwd and back, the Right stick turns left and right.
@@ -205,6 +233,12 @@ public class SimplebotTeleopPOV_Linear extends LinearOpMode {
                                 Math.sqrt(gravity.xAccel*gravity.xAccel
                                         + gravity.yAccel*gravity.yAccel
                                         + gravity.zAccel*gravity.zAccel));
+                    }
+                });
+        telemetry.addLine()
+                .addData("pos", new Func<String>() {
+                    @Override public String value() {
+                        return position.toString();
                     }
                 });
 
