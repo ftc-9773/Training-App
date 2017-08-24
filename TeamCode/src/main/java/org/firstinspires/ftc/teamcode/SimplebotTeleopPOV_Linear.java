@@ -141,7 +141,7 @@ public class SimplebotTeleopPOV_Linear extends LinearOpMode {
             long newEncoderL = robot.leftMotor.getCurrentPosition();
             long newEncoderR = robot.rightMotor.getCurrentPosition();
             long avgEncoderDiff = ((newEncoderL - encoderL) + (newEncoderR - encoderR)) / 2;
-            double avgDist = (double) (avgEncoderDiff * 4) * Math.PI / * 560.0;
+            double avgDist = (double) (avgEncoderDiff * 4) * Math.PI / 560.0;
             encoderL = newEncoderL;
             encoderR = newEncoderR;
             position.x += avgDist * Math.cos(yaw);
