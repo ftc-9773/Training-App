@@ -116,10 +116,6 @@ public class SimplebotTeleopPOV_Linear extends LinearOpMode {
         // Wait for the game to start (driver presses PLAY)
         waitForStart();
 
-        // Start the logging of measured acceleration
-        imu.startAccelerationIntegration(new Position(), new Velocity(), 1000);
-
-
         // run until the end of the match (driver presses STOP)
         while (opModeIsActive()) {
 
@@ -144,8 +140,11 @@ public class SimplebotTeleopPOV_Linear extends LinearOpMode {
             // Pause for metronome tick.  40 mS each cycle = update 25 times a second.
             robot.waitForTick(40);
         }
-        imu.stopAccelerationIntegration();
     }
+
+    //----------------------------------------------------------------------------------------------
+    // location
+    //----------------------------------------------------------------------------------------------
 
     //----------------------------------------------------------------------------------------------
     // Telemetry Configuration
@@ -206,18 +205,6 @@ public class SimplebotTeleopPOV_Linear extends LinearOpMode {
                                 Math.sqrt(gravity.xAccel*gravity.xAccel
                                         + gravity.yAccel*gravity.yAccel
                                         + gravity.zAccel*gravity.zAccel));
-                    }
-                });
-
-        telemetry.addLine()
-                .addData("vel", new Func<String>() {
-                    @Override public String value() {
-                        return imu.getVelocity().toString();
-                    }
-                })
-                .addData("pos", new Func<String>() {
-                    @Override public String value() {
-                        return imu.getPosition().toString();
                     }
                 });
 
